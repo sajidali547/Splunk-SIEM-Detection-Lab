@@ -1,9 +1,0 @@
-index=main (EventCode=4624 OR EventCode=4625)
-```Investigation search for the supplied text-format Windows events. Validate extraction on your data.```
-| rex field=_raw "(?ms)(?:New Logon:|Account For Which Logon Failed:).*?Account Name:\s+(?<raw_target_user>[^\r\n]+)"
-| rex field=_raw "Source Network Address:\s+(?<raw_source_ip>[^\r\n]+)"
-| rex field=_raw "Logon Type:\s+(?<raw_logon_type>\d+)"
-| eval user=trim(coalesce(TargetUserName, raw_target_user)), src_ip=trim(coalesce(IpAddress, Source_Network_Address, raw_source_ip)), endpoint=coalesce(ComputerName, Computer, host), logon_type=coalesce(LogonType, Logon_Type, raw_logon_type)
-| eval src_ip=replace(src_ip, "^::ffff:", ""), outcome=if(EventCode="4625", "failure", "success")
-| sort 0 _time
-| table _time endpoint user src_ip EventCode logon_type outcome
