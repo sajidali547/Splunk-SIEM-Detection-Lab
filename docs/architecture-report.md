@@ -32,6 +32,17 @@ The raw-log and expanded-detail screenshots show these fields:
 
 See the [raw event](../screenshots/04-raw-logs.png) and [expanded details](../screenshots/06-successful-logon-details.png).
 
+## MITRE ATT&CK mapping
+
+Mapping reviewed against the official MITRE ATT&CK pages on **17 November 2026**.
+
+| Tactic | Technique | Mapping rationale | Evidence |
+| --- | --- | --- | --- |
+| Credential Access | [T1110.001 — Brute Force: Password Guessing](https://attack.mitre.org/techniques/T1110/001/) | Several password candidates are tried against one account over SMB. Three `STATUS_LOGON_FAILURE` responses precede an accepted credential. | [Kali test output](../screenshots/03-kali-attack.png). |
+| Initial Access | [T1078.003 — Valid Accounts: Local Accounts](https://attack.mitre.org/techniques/T1078/003/) | The exercise uses valid credentials for the locally configured `VictimUser` account. The successful event shows the account's domain matching the Windows computer name and logon type `3`. | [Accepted credential](../screenshots/03-kali-attack.png), [successful network-logon details](../screenshots/06-successful-logon-details.png). |
+
+**Scope:** These are mappings of simulated authentication behavior. The captures establish a network login; they do not demonstrate administrator access, share access, or lateral movement.
+
 ## Findings
 
 The terminal shows three rejected passwords followed by successful authentication. Splunk contains a successful network login for the test account. The dashboard provides an overview of failed login activity and successful logins by account.

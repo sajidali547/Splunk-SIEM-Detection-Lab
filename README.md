@@ -57,6 +57,15 @@ The two searches are saved in [dashboard_queries.spl](queries/dashboard_queries.
 | A Windows login event is searchable in Splunk. | [Raw logs](screenshots/04-raw-logs.png) |
 | The success event identifies `VictimUser`, source IP `10.242.185.195`, and network logon type `3`. | [Event details](screenshots/06-successful-logon-details.png) |
 
+## MITRE ATT&CK mapping
+
+| Tactic | Technique | Evidence in the lab |
+| --- | --- | --- |
+| Credential Access | [T1110.001 — Password Guessing](https://attack.mitre.org/techniques/T1110/001/) | NetExec tries several passwords for `VictimUser`; three fail before a credential succeeds. |
+| Initial Access | [T1078.003 — Local Accounts](https://attack.mitre.org/techniques/T1078/003/) | The local test account authenticates successfully, and Splunk records its network login (`4624`, type `3`). |
+
+These mappings describe an authorized simulation. Successful authentication does not establish administrator access or lateral movement. See the [mapping rationale and screenshot evidence](docs/architecture-report.md#mitre-attck-mapping).
+
 ## Skills demonstrated
 
 - Configuring centralized log collection with Splunk and Universal Forwarder.
