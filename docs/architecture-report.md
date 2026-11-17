@@ -1,16 +1,39 @@
-# Lab Report
+# Architecture and Event Findings
 
-## Setup
+## Collection flow
 
-Windows Security logs -> Universal Forwarder -> Splunk on TCP `9997` -> `main` index -> dashboard.
+The Windows endpoint generates Security events. Universal Forwarder sends them to Splunk on TCP `9997`, where they are stored in the `main` index and used by the dashboard.
 
-The [input configuration](../configs/inputs.conf) follows the lab guide.
+Kali Linux provides the controlled SMB login test over TCP `445`.
 
-## Test and results
+## Input configuration
 
-- The Kali SMB test shows three failed passwords followed by a successful login for `VictimUser`.
-- Splunk shows a successful login event (`4624`) for that account from `10.242.185.195`.
-- The event has logon type `3`, meaning a network login.
-- The dashboard shows failed logins over time and successful logins by account.
+The lab guide uses this stanza in the forwarder's `etc/system/local/inputs.conf`:
 
-See the [original screenshots](../screenshots/) for evidence.
+```ini
+[WinEventLog://Security]
+disabled = 0
+index = main
+```
+
+The repository copy is available in [configs/inputs.conf](../configs/inputs.conf).
+
+## Successful login record
+
+The raw-log and expanded-detail screenshots show these fields:
+
+| Field | Observed value |
+| --- | --- |
+| Event code | `4624` — successful login |
+| Target account | `VictimUser` |
+| Logon type | `3` — network login |
+| Source network address | `10.242.185.195` |
+| Record number | `92368` |
+
+See the [raw event](../screenshots/04-raw-logs.png) and [expanded details](../screenshots/06-successful-logon-details.png).
+
+## Findings
+
+The terminal shows three rejected passwords followed by successful authentication. Splunk contains a successful network login for the test account. The dashboard provides an overview of failed login activity and successful logins by account.
+
+Together, these show how centralized logs support an investigation: the dashboard highlights activity, while the raw event identifies the account and source. Confirming the exact failure-to-success sequence would require reviewing the matching raw failure records.

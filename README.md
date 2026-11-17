@@ -1,35 +1,72 @@
 # Splunk SIEM Detection Lab
 
-I used Splunk to collect Windows Security logs and monitor failed and successful logins.
+**Windows log collection, authentication analysis, and SOC dashboard monitoring.**
 
-## Lab setup
+## Project overview
 
-- **Splunk Enterprise:** receives and displays logs.
-- **Universal Forwarder:** sends Windows Security logs to Splunk on port `9997`.
-- **Kali Linux:** tests SMB logins using the lab account `VictimUser`.
+I built a Splunk lab to collect Windows Security logs, review login activity, and create a monitoring dashboard. A controlled SMB password test generated activity to investigate using the account name, event details, and source IP.
 
-## What I did
-
-1. Enabled receiving on port `9997`.
-2. Configured the forwarder to collect Security logs.
-3. Tested three wrong passwords, followed by a successful login.
-4. Checked the logs in Splunk and built a dashboard.
+**Tools:** Splunk Enterprise, Splunk Universal Forwarder, Windows Security logs, Kali Linux, and NetExec.
 
 ## Real-world scenario
 
-Someone tries several passwords for an employee account and then logs in successfully. A SOC analyst checks the account, source IP, and login records to see whether the access was expected. This lab demonstrates that pattern using a test account.
+A workstation tries several passwords for an employee account and then logs in successfully. A SOC analyst needs to check who logged in, where the attempt came from, and whether the access was expected.
 
-## Dashboard
+I reproduced this pattern in an authorized lab using the disposable account `VictimUser`.
 
-**SOC - Enterprise Monitoring** shows failed logins over time and successful logins by account.
+## Lab architecture
+
+```mermaid
+flowchart LR
+    K["Kali Linux"] -->|"SMB test / TCP 445"| W["Windows endpoint"]
+    W -->|"Security logs"| F["Universal Forwarder"]
+    F -->|"TCP 9997"| S["Splunk Enterprise"]
+    S -->|"main index"| D["SOC dashboard"]
+```
+
+The Windows endpoint provides the logs, the forwarder sends them, and Splunk stores and displays them.
+
+## Implementation
+
+1. **Configured receiving:** enabled TCP port `9997` in Splunk.
+2. **Collected logs:** configured Universal Forwarder to monitor `WinEventLog://Security` and send events to the `main` index.
+3. **Tested authentication:** used Kali Linux and NetExec to try passwords against the lab account over SMB.
+4. **Reviewed events:** searched Windows login events in Splunk and inspected the successful login details.
+5. **Built the dashboard:** added panels for failed logins over time and successful logins by account.
+
+## Dashboard and searches
+
+The dashboard is named **SOC - Enterprise Monitoring**. Both panels use column charts.
+
+| Panel | Event code | What it shows |
+| --- | --- | --- |
+| Failed logins over time | `4625` | Changes in failed login activity. |
+| Successful logins by account | `4624` | Login counts grouped by account name. |
+
+The two searches are saved in [dashboard_queries.spl](queries/dashboard_queries.spl). Run each search separately.
 
 ![SOC - Enterprise Monitoring dashboard](screenshots/05-siem-dashboard.png)
 
-## Project files
+## Results and evidence
 
-| File | Purpose |
+| Result | Screenshot |
 | --- | --- |
-| [inputs.conf](configs/inputs.conf) | Collect Windows Security logs. |
-| [Dashboard queries](queries/dashboard_queries.spl) | Two panel searches; run each separately. |
-| [Lab report](docs/architecture-report.md) | Short setup and results. |
-| [Screenshots](screenshots/) | Six original screenshots from the lab. |
+| Splunk receiving port `9997` is enabled. | [Receiving setup](screenshots/01-splunk-receiving.png) |
+| The forwarder installer shows the receiving address and port. | [Forwarder setup](screenshots/02-forwarder-config.png) |
+| The SMB test shows three failed password attempts followed by successful authentication. | [Kali test](screenshots/03-kali-attack.png) |
+| A Windows login event is searchable in Splunk. | [Raw logs](screenshots/04-raw-logs.png) |
+| The success event identifies `VictimUser`, source IP `10.242.185.195`, and network logon type `3`. | [Event details](screenshots/06-successful-logon-details.png) |
+
+## Skills demonstrated
+
+- Configuring centralized log collection with Splunk and Universal Forwarder.
+- Reviewing Windows login events and identifying account and source details.
+- Writing SPL searches and building dashboard panels.
+- Explaining a security test using original screenshot evidence.
+
+## Repository guide
+
+- [configs/inputs.conf](configs/inputs.conf): Windows Security log input.
+- [queries/dashboard_queries.spl](queries/dashboard_queries.spl): dashboard searches.
+- [docs/architecture-report.md](docs/architecture-report.md): configuration and event findings.
+- [screenshots/](screenshots/): six original lab screenshots.
