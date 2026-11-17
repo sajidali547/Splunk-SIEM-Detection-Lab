@@ -1,0 +1,5 @@
+index=main EventCode=4625 ```Panel 1: failed logons over time; run separately.```
+| timechart count
+
+index=main EventCode=4624 ```Panel 2: successful logons by account; run separately.```
+| stats count by Account_Name

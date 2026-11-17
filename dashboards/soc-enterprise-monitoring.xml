@@ -1,0 +1,47 @@
+<form version="1.1" theme="dark">
+  <label>SOC - Enterprise Monitoring</label>
+  <description>Windows authentication activity: failed logons over time and successful logons by account.</description>
+  <fieldset submitButton="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time range</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Failed logons over time</title>
+      <chart>
+        <search>
+          <query>index=main EventCode=4625 | timechart count</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Failed logons</option>
+        <option name="charting.fieldColors">{"count":0x8064D8}</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Successful logons by account</title>
+      <chart>
+        <search>
+          <query>index=main EventCode=4624 | stats count by Account_Name</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.axisTitleX.text">Account name</option>
+        <option name="charting.axisTitleY.text">Successful logons</option>
+        <option name="charting.fieldColors">{"count":0x8064D8}</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+</form>

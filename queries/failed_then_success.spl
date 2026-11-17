@@ -1,0 +1,15 @@
+index=main (EventCode=4624 OR EventCode=4625)
+```Proposed analytic: three failures within five minutes before success for the same endpoint, source, and account. Not executed on the lab instance.```
+| rex field=_raw "(?ms)(?:New Logon:|Account For Which Logon Failed:).*?Account Name:\s+(?<raw_target_user>[^\r\n]+)"
+| rex field=_raw "Source Network Address:\s+(?<raw_source_ip>[^\r\n]+)"
+| rex field=_raw "Logon Type:\s+(?<raw_logon_type>\d+)"
+| eval user=trim(coalesce(TargetUserName, raw_target_user)), src_ip=trim(coalesce(IpAddress, Source_Network_Address, raw_source_ip)), endpoint=coalesce(ComputerName, Computer, host), logon_type=coalesce(LogonType, Logon_Type, raw_logon_type)
+| eval src_ip=replace(src_ip, "^::ffff:", "")
+| where logon_type="3" AND isnotnull(endpoint) AND isnotnull(user) AND user!="-" AND isnotnull(src_ip) AND src_ip!="-" AND src_ip!="127.0.0.1" AND src_ip!="::1"
+| eval is_failure=if(EventCode="4625", 1, 0), failure_time=if(EventCode="4625", _time, null())
+| sort 0 _time
+| streamstats time_window=5m sum(is_failure) AS preceding_failures max(failure_time) AS last_failure_time BY endpoint src_ip user
+| where EventCode="4624" AND preceding_failures>=3 AND last_failure_time<_time
+| eval seconds_since_last_failure=round(_time-last_failure_time, 3)
+| fieldformat last_failure_time=strftime(last_failure_time, "%Y-%m-%d %H:%M:%S")
+| table _time endpoint user src_ip logon_type preceding_failures last_failure_time seconds_since_last_failure
